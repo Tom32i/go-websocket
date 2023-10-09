@@ -1,0 +1,14 @@
+{
+  "name": "go-websocket",
+  "version": "1.0.0",
+  "description": "Go Websocket!",
+  "main": "public/client.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Thomas Jarrand",
+  "license": "MIT",
+  "dependencies": {
+    "netcode": "^2.1.1"
+  }
+}
