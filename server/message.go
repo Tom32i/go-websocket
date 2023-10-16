@@ -2,8 +2,8 @@ package server
 
 type Message struct {
     client *Client
-    Name string `json:"name"`
-    Data interface{} `json:"data"`
+    Name string
+    Data interface{}
 }
 
 // type ClientNameMessage struct {

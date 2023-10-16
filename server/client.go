@@ -16,14 +16,14 @@ func (c *Client) setName(name string) {
 	c.name = name
 }
 
-func (c *Client) write(name string, data interface{}) {
-	message := map[string]interface{}{
+func (c *Client) write(data []byte) {
+	/*message := map[string]interface{}{
         "name": name,
         "data": data,
     }
-    m, _ := json.Marshal(message)
-
-	c.socket.WriteMessage(websocket.TextMessage, []byte(m))
+    m, _ := json.Marshal(message)*/
+    log.Printf("write %v", data)
+	c.socket.WriteMessage(websocket.BinaryMessage, data)
 }
 
 func (c *Client) run(server *Server) {

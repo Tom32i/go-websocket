@@ -14,6 +14,7 @@ type Server struct {
     clients map[int]Client
     in chan Message
     out chan []byte
+    encoder BinaryEncoder
 }
 
 func (server *Server) Handler(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +27,7 @@ func (server *Server) Handler(w http.ResponseWriter, r *http.Request) {
     //defer c.Close(websocket.StatusInternalError, "the sky is falling")
 
     client := server.createClient(socket)
-    client.write("id", client.id)
+    client.write(server.encoder.encode("id", client.id))
 
     go client.run(server)
 }
@@ -78,12 +79,13 @@ func (server *Server) removeClient(c *Client) {
     log.Printf("Client #%d left.", c.id)
 }
 
-// func (server Serverv) writeAll(c Client, name string, data interface) {
-//     wsjson.Write(c.ctx, c.socket, map[string]interface{}{
-//         "name": string,
-//         "data": client.id,
-//     })
-// }
+func (server Server) writeAll(name string, data interface{}) {
+    buffer := server.encoder.encode(name, data)
+
+    for _, c := range server.clients {
+        c.write(buffer)
+    }
+}
 
 func CreateServer() Server {
     return Server{
@@ -95,6 +97,11 @@ func CreateServer() Server {
             ReadBufferSize:  1024,
             WriteBufferSize: 1024,
         },
+        encoder: createBinaryEncoder(map[string]Codec{
+            "id": Int8Codec{BaseCodec{1}},
+            "name": StringCodec{BaseCodec{2}},
+            "say": StringCodec{BaseCodec{3}},
+        }, Int8Codec{}),
     }
 }
 
