@@ -3,7 +3,7 @@ package server
 type Message struct {
     client *Client
     Name string
-    Data interface{}
+    Data any
 }
 
 // type ClientNameMessage struct {

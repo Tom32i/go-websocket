@@ -10,8 +10,8 @@ import (
 
 type Server struct {
     upgrader websocket.Upgrader
-    id int
-    clients map[int]Client
+    id uint8
+    clients map[uint8]Client
     in chan Message
     out chan []byte
     encoder BinaryEncoder
@@ -37,10 +37,12 @@ func (server *Server) Run() {
     for {
         select {
             case m := <-server.in:
-                /*switch m.Name {
+                log.Printf("message in: %v", m)
+                switch m.Name {
                     case "name":
-                        m.client.setName(string(m.data))
-                        data := map[string]interface{}{
+                        m.client.setName(m.Data.(string))
+                        log.Printf("client name: %v", m.client.name)
+                        /*data := map[string]interface{}{
                             "id": m.client.id,
                             "name": m.data,
                         }
@@ -49,9 +51,8 @@ func (server *Server) Run() {
                             name: "name",
                             data: data,
                         }
-                        server.out <- message
-                }*/
-                log.Printf("message in: %v", m)
+                        server.out <- message*/
+                }
             case m := <-server.out:
                 log.Printf("message out: %v", m)
         }
@@ -64,6 +65,7 @@ func (server *Server) createClient(socket *websocket.Conn) Client {
     c := Client{
         id: server.id,
         socket: socket,
+        encoder: server.encoder,
         //name: "Tom32i",
     }
 
@@ -90,17 +92,17 @@ func (server Server) writeAll(name string, data interface{}) {
 func CreateServer() Server {
     return Server{
         id: 0,
-        clients: make(map[int]Client),
+        clients: make(map[uint8]Client),
         in: make(chan Message, 16),
         out: make(chan []byte, 16),
         upgrader: websocket.Upgrader{
             ReadBufferSize:  1024,
             WriteBufferSize: 1024,
         },
-        encoder: createBinaryEncoder(map[string]Codec{
-            "id": Int8Codec{BaseCodec{1}},
-            "name": StringCodec{BaseCodec{2}},
-            "say": StringCodec{BaseCodec{3}},
+        encoder: createBinaryEncoder([]Codec{
+            Int8Codec{BaseCodec{0, "id"}},
+            StringCodec{BaseCodec{1, "name"}},
+            StringCodec{BaseCodec{2, "say"}},
         }, Int8Codec{}),
     }
 }

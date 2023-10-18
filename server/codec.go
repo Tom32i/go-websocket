@@ -3,31 +3,27 @@ package server
 import (
     "log"
     "bytes"
-    "encoding/binary"
+    // "encoding/binary"
+    // "encoding/gob"
 )
 
 type BinaryEncoder struct {
 	idCodec Codec
 	codecsByName map[string]Codec
-	codecsById map[int]Codec
+	codecsById map[uint8]Codec
 }
 
-func createBinaryEncoder(codecs map[string]Codec, idCodec Codec) BinaryEncoder {
+func createBinaryEncoder(codecs []Codec, idCodec Codec) BinaryEncoder {
 	var codecsByName map[string]Codec
 	codecsByName = make(map[string]Codec)
-	var codecsById map[int]Codec
-	codecsById = make(map[int]Codec)
-	id := 0
+	var codecsById map[uint8]Codec
+	codecsById = make(map[uint8]Codec)
 
-	for name, codec := range codecs {
-		id++
+	for _, codec := range codecs {
 		//codec.setId(id)
-		codecsById[id] = codec
-		codecsByName[name] = codec
+		codecsById[codec.getId()] = codec
+		codecsByName[codec.getName()] = codec
 	}
-
-	log.Printf("codecsByName: %v", codecs)
-	log.Printf("codecsByName: %v", codecsById)
 
 	return BinaryEncoder{
 		idCodec: idCodec,
@@ -36,68 +32,105 @@ func createBinaryEncoder(codecs map[string]Codec, idCodec Codec) BinaryEncoder {
 	}
 }
 
-func (e BinaryEncoder) encode(name string, data interface{}) []byte {
-	log.Printf("encode: %v %v", name, data)
+func (e BinaryEncoder) encode(name string, data any) []byte {
 	handler := e.codecsByName[name]
-	log.Printf("handler: #%v %v", handler.getId(), handler)
-	//buffer := [e.idCodec.getByteLength() + handler.getByteLength(data)]byte{}
-	//buffer := new(bytes.Buffer)
+
 	var buffer bytes.Buffer
 
-	e.idCodec.encode(buffer, handler.getId())
-	handler.encode(buffer, data)
-	//buffer = append(buffer, e.idCodec.encode(handler.getId())...)
-	//buffer = append(buffer, handler.encode(data)...)
-	log.Printf("buffer: %v", buffer)
-	log.Printf("bytes: %v", buffer.Bytes())
+	e.idCodec.encode(&buffer, handler.getId())
+	handler.encode(&buffer, data)
+
 	return buffer.Bytes()
+}
+
+func (e BinaryEncoder) decode(data []byte) Message {
+	log.Printf("data: %v", data)
+	var buffer = bytes.NewBuffer(data)
+	//log.Printf("next 1: %v", buffer.Next(1))
+	//log.Printf("next 1: %v", buffer.Next(1))
+	//log.Printf("next 3: %v", buffer.Next(3))
+	id := e.idCodec.decode(buffer);
+	log.Printf("id: %v", id)
+	handler := e.codecsById[id.(uint8)]
+	log.Printf("handler: %v", handler)
+
+	return Message {
+		Name: handler.getName(),
+		Data: handler.decode(buffer),
+	}
 }
 
 type Codec interface {
 	//setId(id int)
-	getId() int
-	//getByteLength(data interface{}) int
-	encode(buffer bytes.Buffer, data interface{})
+	getId() uint8
+	getName() string
+	//getByteLength(data any) int
+	encode(buffer *bytes.Buffer, data any)
+	decode(buffer *bytes.Buffer) any
 }
 
 type BaseCodec struct {
-	id int
+	id uint8
+	name string
 }
 
 /*func (c *BaseCodec) setId(id int) {
 	c.id = id
 }*/
 
-func (c BaseCodec) getId() int {
+func (c BaseCodec) getId() uint8 {
 	return c.id
+}
+
+
+func (c BaseCodec) getName() string {
+	return c.name
 }
 
 type Int8Codec struct {
 	BaseCodec
 }
 
-/*func (c Int8Codec) getByteLength(data interface{}) int {
+/*func (c Int8Codec) getByteLength(data any) int {
 	return 1
 }*/
 
-func (c Int8Codec) encode(buffer bytes.Buffer, data interface{}) {
-    //binary.Write(&buffer, binary.LittleEndian, data)
-    //binary.AppendVarint(&buffer, data)
+func (c Int8Codec) encode(buffer *bytes.Buffer, data any) {
+	var b byte = data.(uint8)
+	buffer.Write([]byte{b})
+	//log.Printf("encode.data: %v", data)
+	//log.Printf("encode.buffer: %v", buffer)
+	//log.Printf("encode.bytes: %v", buffer.Bytes())
+}
 
-	log.Printf("encode.data: %v", data)
-	log.Printf("encode.buffer: %v", buffer)
-	log.Printf("encode.bytes: %v", buffer.Bytes())
+func (c Int8Codec) decode(buffer *bytes.Buffer) any {
+	b := buffer.Next(1)
+	log.Printf("b: %T %v", b, b)
+	return b[0]
 }
 
 type StringCodec struct {
 	BaseCodec
 }
 
-/*func (c StringCodec) getByteLength(data interface{}) int {
+/*func (c StringCodec) getByteLength(data any) int {
 	return 2
 }*/
 
-func (c StringCodec) encode(buffer bytes.Buffer, data interface{}) {
-    binary.Write(&buffer, binary.LittleEndian, data)
-    //return []byte(data.(string))
+func (c StringCodec) encode(buffer *bytes.Buffer, data any) {
+	/*length := len(data.(string))
+	log.Printf('')
+	var b byte = .(uint8)
+	buffer.Write([]byte{b})*/
+	buffer.WriteString(data.(string))
+	//log.Printf("encode.data: %v", data)
+	//log.Printf("encode.buffer: %v", buffer)
+	//log.Printf("encode.bytes: %v", buffer.Bytes())
+}
+
+func (c StringCodec) decode(buffer *bytes.Buffer) any {
+	b := buffer.Next(1)
+	t := buffer.Next(int(b[0]) * 2)
+
+	return string(t)
 }

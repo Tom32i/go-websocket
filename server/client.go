@@ -2,14 +2,15 @@ package server
 
 import (
     "log"
-    "encoding/json"
+    // "encoding/json"
     "github.com/gorilla/websocket"
 )
 
 type Client struct {
-	id int
+	id uint8
 	name string
 	socket *websocket.Conn
+    encoder BinaryEncoder
 }
 
 func (c *Client) setName(name string) {
@@ -17,12 +18,6 @@ func (c *Client) setName(name string) {
 }
 
 func (c *Client) write(data []byte) {
-	/*message := map[string]interface{}{
-        "name": name,
-        "data": data,
-    }
-    m, _ := json.Marshal(message)*/
-    log.Printf("write %v", data)
 	c.socket.WriteMessage(websocket.BinaryMessage, data)
 }
 
@@ -47,14 +42,15 @@ func (c *Client) run(server *Server) {
 			break
 		}
 
-		message := Message{
-			client: c,
-		}
+		message := c.encoder.decode(data)
+		message.client = c
+		/*
+
 		jsonErr := json.Unmarshal(data, &message)
 		if jsonErr != nil {
 			log.Printf("error decoding json: %v", jsonErr)
 			break
-		}
+		}*/
 
 		server.in <- message
 	}
