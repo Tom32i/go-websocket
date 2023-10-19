@@ -2,7 +2,6 @@ package server
 
 import (
     "log"
-    // "encoding/json"
     "github.com/gorilla/websocket"
 )
 
@@ -44,33 +43,7 @@ func (c *Client) run(server *Server) {
 
 		message := c.encoder.decode(data)
 		message.client = c
-		/*
-
-		jsonErr := json.Unmarshal(data, &message)
-		if jsonErr != nil {
-			log.Printf("error decoding json: %v", jsonErr)
-			break
-		}*/
 
 		server.in <- message
 	}
 }
-
-// func parseMessage(message Message) Message {
-// 	switch m.name {
-// 		case "name":
-// 			return ClientNameMessage{
-// 				client: c,
-// 				name: m.name,
-// 				data: interface{}{
-// 					name: m.data,
-// 					id: client.id,
-// 				},
-// 			}
-// 		default:
-// 			return message
-// 	}
-// }
-
-
-

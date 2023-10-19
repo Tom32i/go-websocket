@@ -2,8 +2,8 @@ package server
 
 type Message struct {
     client *Client
-    Name string
-    Data any
+    name string
+    data any
 }
 
 // type ClientNameMessage struct {

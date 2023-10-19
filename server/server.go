@@ -13,12 +13,12 @@ type Server struct {
     id uint8
     clients map[uint8]Client
     in chan Message
-    out chan []byte
+    out chan Message
     encoder BinaryEncoder
 }
 
 func (server *Server) Handler(w http.ResponseWriter, r *http.Request) {
-    log.Printf("upgrading connexion")
+    log.Printf("Upgrading connexion")
     socket, err := server.upgrader.Upgrade(w, r, nil)
     if err != nil {
         log.Println(err)
@@ -38,23 +38,27 @@ func (server *Server) Run() {
         select {
             case m := <-server.in:
                 log.Printf("message in: %v", m)
-                switch m.Name {
-                    case "name":
-                        m.client.setName(m.Data.(string))
-                        log.Printf("client name: %v", m.client.name)
-                        /*data := map[string]interface{}{
-                            "id": m.client.id,
-                            "name": m.data,
-                        }
-                        message := Message{
+                switch m.name {
+                    case "me:name":
+                        m.client.setName(m.data.(string))
+                        //log.Printf("client name: %v", m.client.name)
+                        server.out <- Message{
                             client: m.client,
-                            name: "name",
-                            data: data,
+                            name: "say",
+                            data: "Test € !",
                         }
-                        server.out <- message*/
+                        server.out <- Message{
+                            client: m.client,
+                            name: "client:add",
+                            data: ClientAddMessage {
+                                id: m.client.id,
+                                name: m.client.name,
+                            },
+                        }
                 }
             case m := <-server.out:
                 log.Printf("message out: %v", m)
+                server.writeAll(m.name, m.data)
         }
     }
 }
@@ -81,9 +85,8 @@ func (server *Server) removeClient(c *Client) {
     log.Printf("Client #%d left.", c.id)
 }
 
-func (server Server) writeAll(name string, data interface{}) {
+func (server Server) writeAll(name string, data any) {
     buffer := server.encoder.encode(name, data)
-
     for _, c := range server.clients {
         c.write(buffer)
     }
@@ -94,15 +97,16 @@ func CreateServer() Server {
         id: 0,
         clients: make(map[uint8]Client),
         in: make(chan Message, 16),
-        out: make(chan []byte, 16),
+        out: make(chan Message, 16),
         upgrader: websocket.Upgrader{
             ReadBufferSize:  1024,
             WriteBufferSize: 1024,
         },
         encoder: createBinaryEncoder([]Codec{
             Int8Codec{BaseCodec{0, "id"}},
-            StringCodec{BaseCodec{1, "name"}},
-            StringCodec{BaseCodec{2, "say"}},
+            StringCodec{BaseCodec{1, "me:name"}},
+            createClientAddCodec(2, "client:add"),
+            StringCodec{BaseCodec{3, "say"}},
         }, Int8Codec{}),
     }
 }
