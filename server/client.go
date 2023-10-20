@@ -3,13 +3,19 @@ package server
 import (
     "log"
     "github.com/gorilla/websocket"
+    "curvygo/server/codec"
 )
 
 type Client struct {
 	id uint8
 	name string
 	socket *websocket.Conn
-    encoder BinaryEncoder
+    encoder codec.BinaryEncoder
+}
+
+type ClientMessage struct {
+    client *Client
+    message codec.Message
 }
 
 func (c *Client) setName(name string) {
@@ -41,9 +47,9 @@ func (c *Client) run(server *Server) {
 			break
 		}
 
-		message := c.encoder.decode(data)
-		message.client = c
-
-		server.in <- message
+		server.in <- ClientMessage{
+			client: c,
+			message: c.encoder.Decode(data),
+		}
 	}
 }

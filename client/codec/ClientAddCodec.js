@@ -1,6 +1,8 @@
-const { Client, BinaryEncoder, Int8Codec, StringCodec, Codec } = netcode;
+import Codec from 'netcode/src/encoder/codec/Codec';
+import Int8Codec from 'netcode/src/encoder/codec/Int8Codec';
+import StringCodec from 'netcode/src/encoder/codec/StringCodec';
 
-class ClientAddCodec extends Codec {
+export default class ClientAddCodec extends Codec {
     constructor() {
         super();
 
