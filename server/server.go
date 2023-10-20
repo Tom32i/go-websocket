@@ -37,15 +37,22 @@ func (server *Server) Run() {
     for {
         select {
             case m := <-server.in:
-                log.Printf("message in: %v (%v)", m.message.Name, m.message.Data)
+                //log.Printf("message in: %v (%v)", m.message.Name, m.message.Data)
                 switch m.message.Name {
                     case "me:name":
                         m.client.setName(m.message.Data.(string))
                         log.Printf("Client #%v name is '%v'.", m.client.id, m.client.name)
-                        // server.writeAll("say", "Test € !")
                         server.writeAll(
                             "client:name",
                             codec.ClientNameMessage { m.client.id, m.client.name },
+                        )
+                    case "me:position":
+                        position := m.message.Data.(codec.Position)
+                        m.client.setPosition(position.X, position.Y)
+                        //log.Printf("Client #%v position is %v,%v.", m.client.id, m.client.x, m.client.y)
+                        server.writeAll(
+                            "client:position",
+                            codec.ClientPosition { m.client.id, codec.Position{m.client.x, m.client.y} },
                         )
                 }
         }
@@ -104,25 +111,24 @@ func CreateServer() Server {
         upgrader: websocket.Upgrader{
             ReadBufferSize:  1024,
             WriteBufferSize: 1024,
-            CheckOrigin: func(r *http.Request) bool {
+            Subprotocols: []string{ "websocket" },
+            Error: func (w http.ResponseWriter, r *http.Request, status int, reason error) {
+                log.Printf("errorHandler: %v %v", status, reason)
+            },
+            CheckOrigin: func (r *http.Request) bool {
                 return true
             },
         },
-        /*encoder: codec.CreateBinaryEncoder([]codec.Codec{
-            codec.Int8Codec{codec.BaseCodec{0, "me:id"}},
-            codec.StringCodec{codec.BaseCodec{1, "me:name"}},
-            codec.createClientAddCodec(2, "client:add"),
-            codec.Int8Codec{codec.BaseCodec{3, "client:remove"}},
-            codec.StringCodec{codec.BaseCodec{4, "client:name"}},
-            codec.StringCodec{codec.BaseCodec{5, "say"}},
-        }, codec.Int8Codec{}),*/
         encoder: codec.CreateBinaryEncoder([]codec.RegisteredCodec{
             codec.RegisteredCodec{0, "me:id", codec.Int8Codec{}},
             codec.RegisteredCodec{0, "me:name", codec.StringCodec{}},
+            codec.RegisteredCodec{0, "me:position", codec.CreatePositionCodec()},
             codec.RegisteredCodec{0, "client:add", codec.CreateClientAddCodec()},
             codec.RegisteredCodec{0, "client:remove", codec.Int8Codec{}},
             codec.RegisteredCodec{0, "client:name", codec.CreateClientNameCodec()},
+            codec.RegisteredCodec{0, "client:position", codec.CreateClientPositionCodec()},
             codec.RegisteredCodec{0, "say", codec.StringCodec{}},
+            codec.RegisteredCodec{0, "test", codec.Int16Codec{}},
         }, codec.Int8Codec{}),
     }
 }

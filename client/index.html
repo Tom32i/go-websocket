@@ -8,10 +8,34 @@
         .me {
             font-weight: bold;
         }
+
+        #clients {
+            position: fixed;
+            top: 0;
+            left: 0;
+            margin: 0;
+            padding: 0;
+        }
+
+        #clients li {
+            position: fixed;
+            margin: 0;
+            padding: 0;
+            margin-left: 1em;
+        }
+
+        #name-label {
+            position: fixed;
+            right: 1em;
+            top: 1em;
+        }
     </style>
 </head>
 <body>
     <h1>Go Websocket</h1>
+    <label id="name-label">Name:
+        <input type="text" name="name" id="name">
+    </label>
     <ul id="clients"></ul>
 </body>
 </html>

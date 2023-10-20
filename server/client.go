@@ -11,6 +11,8 @@ type Client struct {
 	name string
 	socket *websocket.Conn
     encoder codec.BinaryEncoder
+	x uint16
+	y uint16
 }
 
 type ClientMessage struct {
@@ -20,6 +22,11 @@ type ClientMessage struct {
 
 func (c *Client) setName(name string) {
 	c.name = name
+}
+
+func (c *Client) setPosition(x uint16, y uint16) {
+	c.x = x
+	c.y = y
 }
 
 func (c *Client) write(data []byte) {
