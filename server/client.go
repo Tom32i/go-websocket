@@ -22,6 +22,7 @@ type ClientMessage struct {
 
 func (c *Client) setName(name string) {
 	c.name = name
+	log.Printf("Client #%v name is '%v'.", c.id, c.name)
 }
 
 func (c *Client) setPosition(x uint16, y uint16) {
@@ -54,9 +55,6 @@ func (c *Client) run(server *Server) {
 			break
 		}
 
-		server.in <- ClientMessage{
-			client: c,
-			message: c.encoder.Decode(data),
-		}
+		server.in <- ClientMessage{c, c.encoder.Decode(data)}
 	}
 }

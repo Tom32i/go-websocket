@@ -1,17 +1,15 @@
 package server
 
 import (
-    // "fmt"
     "log"
     "net/http"
     "github.com/gorilla/websocket"
-    // "time"
     "curvygo/server/codec"
 )
 
 type Server struct {
-    upgrader websocket.Upgrader
     id uint8
+    upgrader websocket.Upgrader
     clients map[uint8]*Client
     in chan ClientMessage
     encoder codec.BinaryEncoder
@@ -24,7 +22,6 @@ func (server *Server) Handler(w http.ResponseWriter, r *http.Request) {
         log.Println(err)
         return
     }
-    //defer c.Close(websocket.StatusInternalError, "the sky is falling")
 
     client := server.createClient(socket)
     server.init(client)
@@ -41,7 +38,6 @@ func (server *Server) Run() {
                 switch m.message.Name {
                     case "me:name":
                         m.client.setName(m.message.Data.(string))
-                        log.Printf("Client #%v name is '%v'.", m.client.id, m.client.name)
                         server.writeAll(
                             "client:name",
                             codec.ClientNameMessage { m.client.id, m.client.name },
@@ -49,7 +45,6 @@ func (server *Server) Run() {
                     case "me:position":
                         position := m.message.Data.(codec.Position)
                         m.client.setPosition(position.X, position.Y)
-                        //log.Printf("Client #%v position is %v,%v.", m.client.id, m.client.x, m.client.y)
                         server.writeAll(
                             "client:position",
                             codec.ClientPosition { m.client.id, codec.Position{m.client.x, m.client.y} },
@@ -95,10 +90,11 @@ func (server *Server) init(client *Client) {
     // Send the client its id
     client.write(server.encoder.Encode("me:id", client.id))
 
-    // Send the clients the current client list
+    // Send the clients the current client list and positions
     for _, c := range server.clients {
         if c.id != client.id {
             client.write(server.encoder.Encode("client:add", codec.ClientAddMessage { c.id, c.name }))
+            client.write(server.encoder.Encode("client:position", codec.ClientPosition { c.id, codec.Position{c.x, c.y} }))
         }
     }
 }
@@ -111,9 +107,9 @@ func CreateServer() Server {
         upgrader: websocket.Upgrader{
             ReadBufferSize:  1024,
             WriteBufferSize: 1024,
-            Subprotocols: []string{ "websocket" },
+            Subprotocols: []string{"websocket"},
             Error: func (w http.ResponseWriter, r *http.Request, status int, reason error) {
-                log.Printf("errorHandler: %v %v", status, reason)
+                log.Printf("Error: %v %v", status, reason)
             },
             CheckOrigin: func (r *http.Request) bool {
                 return true
@@ -128,7 +124,6 @@ func CreateServer() Server {
             codec.RegisteredCodec{0, "client:name", codec.CreateClientNameCodec()},
             codec.RegisteredCodec{0, "client:position", codec.CreateClientPositionCodec()},
             codec.RegisteredCodec{0, "say", codec.StringCodec{}},
-            codec.RegisteredCodec{0, "test", codec.Int16Codec{}},
         }, codec.Int8Codec{}),
     }
 }

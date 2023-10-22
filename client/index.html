@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Go websocket!</title>
     <style type="text/css">
-        .me {
+        body {
+            font-family: Verdana, sans-serif;
+        }
+
+        #clients .me {
             font-weight: bold;
+            background-color: #E5E5E5;
+            border-color: #E5E5E5;
+            z-index: 10;
         }
 
         #clients {
@@ -20,8 +27,12 @@
         #clients li {
             position: fixed;
             margin: 0;
-            padding: 0;
-            margin-left: 1em;
+            padding: 0.2em 0.4em;
+            margin-left: 1.2em;
+            border: 1px solid #E5E5E5;
+            background-color: #fff;
+            border-radius: 1em;
+            list-style: none;
         }
 
         #name-label {

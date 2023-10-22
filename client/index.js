@@ -10,8 +10,9 @@ import PositionCodec from '@client/codec/PositionCodec';
 import ClientPositionCodec from '@client/codec/ClientPositionCodec';
 import View from '@client/view/View';
 
+const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
 const client = new Client(
-    `ws://${location.host}/ws`,
+    `${protocol}://${location.host}/ws`,
     new BinaryEncoder([
         ['me:id', new Int8Codec()],
         ['me:name', new StringCodec()],
@@ -21,20 +22,13 @@ const client = new Client(
         ['client:name', new ClientNameCodec()],
         ['client:position', new ClientPositionCodec()],
         ['say', new StringCodec()],
-        ['test', new Int16Codec()],
     ])
 );
 
-const view = new View(
-    document.getElementById('clients')
-);
+const view = new View(document.getElementById('clients'));
 const nameInput = document.getElementById('name');
 nameInput.value = (Math.random() + 1).toString(36).substring(7);
-nameInput.addEventListener('change', () => {
-    client.send('me:name', nameInput.value);
-});
-
-console.log(nameInput);
+nameInput.addEventListener('change', () => client.send('me:name', nameInput.value));
 
 window.addEventListener('mousemove', event => {
     const { clientX: x, clientY: y } = event;
@@ -42,7 +36,6 @@ window.addEventListener('mousemove', event => {
         view.me.setPosition(x, y);
         client.send('me:position', { x, y });
     }
-    // console.log(clientX, clientY);
 });
 
 client.on('open', () => {
@@ -50,7 +43,6 @@ client.on('open', () => {
         console.log(`My id is ${event.detail}, my name is ${nameInput.value}.`);
         view.setMe(event.detail);
         client.send('me:name', nameInput.value);
-        client.send('test', 1337);
     });
     client.on('client:add', ({ detail }) => view.addClient(detail.id, detail.name));
     client.on('client:remove', ({ detail }) => view.removeClient(detail));

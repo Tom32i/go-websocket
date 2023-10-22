@@ -24,6 +24,7 @@ help:
 
 ## Install dependencies
 install:
+	go get
 	npm install
 
 ## Start watcher
@@ -41,12 +42,35 @@ build-client:
 start:
 	go run main.go
 
-build-server:
-	go build -o curvygo main.go
+build-server@dev:
+	go build -o ./bin/server main.go
+
+build-server@staging: export GOOS=linux
+build-server@staging: export GOARCH=arm64
+build-server@staging:
+	go build -o ./bin/server main.go
+
+build-server@production: export GOOS=linux
+build-server@production: export GOARCH=amd64
+build-server@production:
+	go build -o ./bin/server main.go
 
 ## Build
-build: build-server build-client
+build: build-server@dev build-client
 
 ## Start server
 run: build
-	./curvygo
+	./bin/server
+
+##########
+# Deploy #
+##########
+
+deploy@staging: build-client build-server@staging
+	rsync -arzv --delete public/* tom32i@deployer.vm:/home/tom32i/go/public
+	rsync -arzv bin/server tom32i@deployer.vm:/home/tom32i/go/
+
+## Build and deploy to production
+deploy@production: build-client build-server@production
+	rsync -arzv --delete public/* tom32i@tom32i.fr:/home/tom32i/go/public
+	rsync -arzv bin/server tom32i@tom32i.fr:/home/tom32i/go

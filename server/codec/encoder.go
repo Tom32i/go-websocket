@@ -28,10 +28,8 @@ type Message struct {
 }
 
 func CreateBinaryEncoder(codecs []RegisteredCodec, idCodec Codec) BinaryEncoder {
-    var codecsByName map[string]RegisteredCodec
-    codecsByName = make(map[string]RegisteredCodec)
-    var codecsById map[uint8]RegisteredCodec
-    codecsById = make(map[uint8]RegisteredCodec)
+    codecsByName := make(map[string]RegisteredCodec)
+    codecsById := make(map[uint8]RegisteredCodec)
 
     for index, codec := range codecs {
         codec.Id = uint8(index)
