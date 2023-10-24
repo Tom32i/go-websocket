@@ -40,12 +40,6 @@ func (c *Client) run(server *Server) {
 		c.socket.Close()
 	}()
 
-	//c.socket.SetReadLimit(maxMessageSize)
-	//c.socket.SetReadDeadline(time.Now().Add(pongWait))
-	//c.socket.SetPongHandler(func(string) error {
-	//	c.socket.SetReadDeadline(time.Now().Add(pongWait)); return nil
-	//})
-
 	for {
 		_, data, err := c.socket.ReadMessage()
 		if err != nil {

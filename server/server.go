@@ -103,7 +103,7 @@ func CreateServer() Server {
     return Server{
         id: 0,
         clients: make(map[uint8]*Client),
-        in: make(chan ClientMessage, 16),
+        in: make(chan ClientMessage),
         upgrader: websocket.Upgrader{
             ReadBufferSize:  1024,
             WriteBufferSize: 1024,
@@ -116,14 +116,14 @@ func CreateServer() Server {
             },
         },
         encoder: codec.CreateBinaryEncoder([]codec.RegisteredCodec{
-            codec.RegisteredCodec{0, "me:id", codec.Int8Codec{}},
-            codec.RegisteredCodec{0, "me:name", codec.StringCodec{}},
-            codec.RegisteredCodec{0, "me:position", codec.CreatePositionCodec()},
-            codec.RegisteredCodec{0, "client:add", codec.CreateClientAddCodec()},
-            codec.RegisteredCodec{0, "client:remove", codec.Int8Codec{}},
-            codec.RegisteredCodec{0, "client:name", codec.CreateClientNameCodec()},
-            codec.RegisteredCodec{0, "client:position", codec.CreateClientPositionCodec()},
-            codec.RegisteredCodec{0, "say", codec.StringCodec{}},
+            {0, "me:id", codec.Int8Codec{}},
+            {0, "me:name", codec.StringCodec{}},
+            {0, "me:position", codec.CreatePositionCodec()},
+            {0, "client:add", codec.CreateClientAddCodec()},
+            {0, "client:remove", codec.Int8Codec{}},
+            {0, "client:name", codec.CreateClientNameCodec()},
+            {0, "client:position", codec.CreateClientPositionCodec()},
+            {0, "say", codec.StringCodec{}},
         }, codec.Int8Codec{}),
     }
 }
