@@ -2,13 +2,13 @@ package server
 
 import (
     "log"
+    "errors"
     "net/http"
     "github.com/gorilla/websocket"
     "curvygo/server/codec"
 )
 
 type Server struct {
-    id uint8
     upgrader websocket.Upgrader
     clients map[uint8]*Client
     in chan ClientMessage
@@ -17,13 +17,20 @@ type Server struct {
 
 func (server *Server) Handler(w http.ResponseWriter, r *http.Request) {
     log.Printf("Upgrading connexion")
+
     socket, err := server.upgrader.Upgrade(w, r, nil)
     if err != nil {
         log.Println(err)
         return
     }
 
-    client := server.createClient(socket)
+    client, error := server.createClient(socket)
+
+    if error != nil {
+        log.Println(error)
+        return
+    }
+
     server.init(client)
 
     go client.run(server)
@@ -54,11 +61,15 @@ func (server *Server) Run() {
     }
 }
 
-func (server *Server) createClient(socket *websocket.Conn) *Client {
-    server.id++
+func (server *Server) createClient(socket *websocket.Conn) (*Client, error) {
+    id, error := server.nextId()
+
+    if error != nil {
+        return nil, error
+    }
 
     c := Client{
-        id: server.id,
+        id: id,
         socket: socket,
         encoder: server.encoder,
     }
@@ -67,7 +78,7 @@ func (server *Server) createClient(socket *websocket.Conn) *Client {
 
     log.Printf("Client #%d joined.", c.id)
 
-    return &c
+    return &c, nil
 }
 
 func (server *Server) removeClient(c *Client) {
@@ -99,9 +110,21 @@ func (server *Server) init(client *Client) {
     }
 }
 
+func (server *Server) nextId() (uint8, error) {
+    for i := 0; i < 256; i++ {
+        id := uint8(i)
+        _, ok := server.clients[id]
+
+        if !ok {
+            return id, nil
+        }
+    }
+
+    return uint8(0), errors.New("Client limit reached!")
+}
+
 func CreateServer() Server {
     return Server{
-        id: 0,
         clients: make(map[uint8]*Client),
         in: make(chan ClientMessage),
         upgrader: websocket.Upgrader{
