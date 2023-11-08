@@ -39,24 +39,22 @@ func (server *Server) Handler(w http.ResponseWriter, r *http.Request) {
 func (server *Server) Run() {
 	log.Printf("Server running")
 	for {
-		select {
-		case m := <-server.in:
-			//log.Printf("message in: %v (%v)", m.message.Name, m.message.Data)
-			switch m.message.Name {
-			case "me:name":
-				m.client.setName(m.message.Data.(string))
-				server.writeAll(
-					"client:name",
-					codec.ClientNameMessage{m.client.id, m.client.name},
-				)
-			case "me:position":
-				position := m.message.Data.(codec.Position)
-				m.client.setPosition(position.X, position.Y)
-				server.writeAll(
-					"client:position",
-					codec.ClientPosition{m.client.id, codec.Position{m.client.x, m.client.y}},
-				)
-			}
+		m := <-server.in
+		//log.Printf("message in: %v (%v)", m.message.Name, m.message.Data)
+		switch m.message.Name {
+		case "me:name":
+			m.client.setName(m.message.Data.(string))
+			server.writeAll(
+				"client:name",
+				codec.ClientNameMessage{m.client.id, m.client.name},
+			)
+		case "me:position":
+			position := m.message.Data.(codec.Position)
+			m.client.setPosition(position.X, position.Y)
+			server.writeAll(
+				"client:position",
+				codec.ClientPosition{m.client.id, codec.Position{m.client.x, m.client.y}},
+			)
 		}
 	}
 }
