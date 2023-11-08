@@ -136,15 +136,15 @@ func CreateServer() Server {
 				return true
 			},
 		},
-		encoder: codec.CreateBinaryEncoder([]*codec.RegisteredCodec{
-			{0, "me:id", codec.Int8Codec{}},
-			{0, "me:name", codec.StringCodec{}},
+		encoder: codec.CreateBinaryEncoder([]codec.RegisteredCodec{
+			{0, "me:id", &codec.Int8Codec{}},
+			{0, "me:name", &codec.StringCodec{}},
 			{0, "me:position", codec.CreatePositionCodec()},
 			{0, "client:add", codec.CreateClientAddCodec()},
-			{0, "client:remove", codec.Int8Codec{}},
+			{0, "client:remove", &codec.Int8Codec{}},
 			{0, "client:name", codec.CreateClientNameCodec()},
 			{0, "client:position", codec.CreateClientPositionCodec()},
-			{0, "say", codec.StringCodec{}},
-		}, codec.Int8Codec{}),
+			{0, "say", &codec.StringCodec{}},
+		}, &codec.Int8Codec{}),
 	}
 }

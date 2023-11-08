@@ -5,8 +5,8 @@ import (
 )
 
 type ClientPositionCodec struct {
-    idCodec Int8Codec
-    positionCodec PositionCodec
+    idCodec *Int8Codec
+    positionCodec *PositionCodec
 }
 
 type ClientPosition struct {
@@ -14,22 +14,22 @@ type ClientPosition struct {
     Position Position
 }
 
-func (c ClientPositionCodec) encode(buffer *bytes.Buffer, data any) {
+func (c *ClientPositionCodec) encode(buffer *bytes.Buffer, data any) {
     message := data.(ClientPosition)
     c.idCodec.encode(buffer, message.Id)
     c.positionCodec.encode(buffer, message.Position)
 }
 
-func (c ClientPositionCodec) decode(buffer *bytes.Buffer) any {
+func (c *ClientPositionCodec) decode(buffer *bytes.Buffer) any {
     return ClientPosition{
         Id: c.idCodec.decode(buffer).(uint8),
         Position: c.positionCodec.decode(buffer).(Position),
     }
 }
 
-func CreateClientPositionCodec() ClientPositionCodec {
-    return ClientPositionCodec{
-        idCodec: Int8Codec{},
-        positionCodec: PositionCodec{},
+func CreateClientPositionCodec() *ClientPositionCodec {
+    return &ClientPositionCodec{
+        idCodec: &Int8Codec{},
+        positionCodec: &PositionCodec{},
     }
 }

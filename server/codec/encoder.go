@@ -1,19 +1,18 @@
 package codec
 
 import (
-	// "log"
 	"bytes"
 )
-
-type BinaryEncoder struct {
-	idCodec      Codec
-	codecsByName map[string]*RegisteredCodec
-	codecsById   map[uint8]*RegisteredCodec
-}
 
 type Codec interface {
 	encode(buffer *bytes.Buffer, data any)
 	decode(buffer *bytes.Buffer) any
+}
+
+type BinaryEncoder struct {
+	idCodec      Codec
+	codecsByName map[string]RegisteredCodec
+	codecsById   map[uint8]RegisteredCodec
 }
 
 type RegisteredCodec struct {
@@ -27,9 +26,9 @@ type Message struct {
 	Data any
 }
 
-func CreateBinaryEncoder(codecs []*RegisteredCodec, idCodec Codec) BinaryEncoder {
-	codecsByName := make(map[string]*RegisteredCodec)
-	codecsById := make(map[uint8]*RegisteredCodec)
+func CreateBinaryEncoder(codecs []RegisteredCodec, idCodec Codec) BinaryEncoder {
+	codecsByName := make(map[string]RegisteredCodec)
+	codecsById := make(map[uint8]RegisteredCodec)
 
 	for index, codec := range codecs {
 		codec.Id = uint8(index)
@@ -44,7 +43,7 @@ func CreateBinaryEncoder(codecs []*RegisteredCodec, idCodec Codec) BinaryEncoder
 	}
 }
 
-func (e BinaryEncoder) Encode(name string, data any) []byte {
+func (e *BinaryEncoder) Encode(name string, data any) []byte {
 	codec := e.codecsByName[name]
 
 	var buffer bytes.Buffer
@@ -55,7 +54,7 @@ func (e BinaryEncoder) Encode(name string, data any) []byte {
 	return buffer.Bytes()
 }
 
-func (e BinaryEncoder) Decode(data []byte) Message {
+func (e *BinaryEncoder) Decode(data []byte) Message {
 	var buffer = bytes.NewBuffer(data)
 	id := e.idCodec.decode(buffer)
 	codec := e.codecsById[id.(uint8)]
