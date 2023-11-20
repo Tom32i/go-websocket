@@ -2,8 +2,9 @@ import Client from '@client/view/Client';
 import Loop from '@client/view/Loop';
 
 export default class View {
-    constructor(element) {
-        this.element = element;
+    constructor(list, counter) {
+        this.list = list;
+        this.counter = counter;
         this.clients = new Map();
         this.loop = new Loop();
         this.me = null;
@@ -42,8 +43,9 @@ export default class View {
         const element = document.createElement('li');
         const client = new Client(id, name, element);
 
-        this.element.appendChild(element);
+        this.list.appendChild(element);
         this.clients.set(id, client);
+        this.counter.innerText = this.clients.size;
 
         console.log(`New client #${id}: "${name}".`);
     }
@@ -53,6 +55,7 @@ export default class View {
             const client = this.clients.get(id);
             client.element.remove();
             this.clients.delete(id);
+            this.counter.innerText = this.clients.size;
             console.log(`Client #${id} left.`);
         }
     }

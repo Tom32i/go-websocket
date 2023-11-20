@@ -13,18 +13,21 @@
             position: fixed;
             padding: 0;
             margin: 0;
+            overflow: hidden;
+            background-color: transparent;
+            /*-webkit-overflow-scrolling: touch;*/
         }
 
         h1 {
             text-align: center;
-            font-size: 2em;
+            font-size: 1.4em;
             padding: 0;
         }
 
         #clients .me {
             font-weight: bold;
-            background-color: #E5E5E5;
-            border-color: #E5E5E5;
+            background-color: #E2ECEC;
+            border-color: #D2DCDC;
             z-index: 10;
         }
 
@@ -52,12 +55,30 @@
             right: 1em;
             top: 1em;
         }
+
+        @media (max-width: 768px) {
+            #name-label {
+                top: auto;
+                right: auto;
+                bottom: 1em;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Go Websocket</h1>
-    <label id="name-label">Name:
-        <input type="text" name="name" id="name">
+    <h1>
+        Go Websocket
+        <br>
+        <small>
+            <span id="counter">0</span> clients
+        </small>
+    </h1>
+    <label id="name-label">
+        <input type="text" name="name" id="name" placeholder="Pseudo">
     </label>
     <ul id="clients"></ul>
 </body>

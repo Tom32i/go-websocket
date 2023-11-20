@@ -26,7 +26,7 @@ export default class Client {
     }
 
     render() {
-        this.element.style.transform = `translate(${this.x}px, ${this.y}px)`
+        this.element.style.transform = `translate3d(${this.x}px, ${this.y}px, 0px)`
         this.element.innerText = `${this.name} (${this.x},${this.y})`;
     }
 }
