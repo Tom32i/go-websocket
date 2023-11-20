@@ -4,10 +4,10 @@
 
     make start
 
-http://localhost:8032
+http://localhost:8034
 
 ## Start the prod server
 
     make build
 
-    bin/server --port 8032
+    bin/server --port 8034

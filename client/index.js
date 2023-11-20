@@ -1,5 +1,6 @@
 //import '@css/style.scss';
 import Client from 'netcode/src/client/Client';
+import MoveHandler from '@client/view/MoveHandler';
 import BinaryEncoder from 'netcode/src/encoder/BinaryEncoder';
 import Int8Codec from 'netcode/src/encoder/codec/Int8Codec';
 import Int16Codec from 'netcode/src/encoder/codec/Int16Codec';
@@ -30,13 +31,14 @@ const nameInput = document.getElementById('name');
 nameInput.value = (Math.random() + 1).toString(36).substring(7);
 nameInput.addEventListener('change', () => client.send('me:name', nameInput.value));
 
-window.addEventListener('mousemove', event => {
-    const { clientX: x, clientY: y } = event;
+function handleMove(x, y) {
     if (view.me !== null) {
         view.me.setPosition(x, y);
         client.send('me:position', { x, y });
     }
-});
+}
+
+const move = new MoveHandler(handleMove);
 
 client.on('open', () => {
     client.on('me:id', event => {

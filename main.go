@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-    port := flag.Int("port", 8032, "Port to run on")
+    port := flag.Int("port", 8034, "Port to run on")
     public := flag.String("public", "./public", "Public path to serve")
 
     flag.Parse()

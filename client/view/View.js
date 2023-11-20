@@ -35,17 +35,14 @@ export default class View {
     setClientPosition(id, x, y) {
         if (this.clients.has(id)) {
             this.clients.get(id).setPosition(x, y);
-            //console.log(`Client #${id} is named "${name}".`);
         }
     }
 
     addClient(id, name) {
         const element = document.createElement('li');
         const client = new Client(id, name, element);
-        console.log(this.me, id, this.me === id);
 
         this.element.appendChild(element);
-
         this.clients.set(id, client);
 
         console.log(`New client #${id}: "${name}".`);
