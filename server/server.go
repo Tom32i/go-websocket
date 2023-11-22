@@ -44,17 +44,17 @@ func (server *Server) Run() {
 		switch m.message.Name {
 		case "me:name":
 			m.client.setName(m.message.Data.(string))
-			server.writeAll(
+			server.writeAll(codec.Message{
 				"client:name",
 				codec.ClientNameMessage{m.client.id, m.client.name},
-			)
+			})
 		case "me:position":
 			position := m.message.Data.(codec.Position)
 			m.client.setPosition(position.X, position.Y)
-			server.writeAll(
+			server.writeAll(codec.Message{
 				"client:position",
 				codec.ClientPosition{m.client.id, codec.Position{m.client.x, m.client.y}},
-			)
+			})
 		}
 	}
 }
@@ -81,12 +81,12 @@ func (server *Server) createClient(socket *websocket.Conn) (*Client, error) {
 
 func (server *Server) removeClient(c *Client) {
 	delete(server.clients, c.id)
-	server.writeAll("client:remove", c.id)
+	server.writeAll(codec.Message{"client:remove", c.id})
 	log.Printf("Client #%d left.", c.id)
 }
 
-func (server Server) writeAll(name string, data any) {
-	buffer := server.encoder.Encode(name, data)
+func (server Server) writeAll(message codec.Message) {
+	buffer := server.encoder.Encode(message)
 	for _, c := range server.clients {
 		c.write(buffer)
 	}
@@ -94,16 +94,25 @@ func (server Server) writeAll(name string, data any) {
 
 func (server *Server) init(client *Client) {
 	// Send the client to everybody
-	server.writeAll("client:add", codec.ClientAddMessage{client.id, client.name})
+	server.writeAll(codec.Message{
+        "client:add",
+        codec.ClientAddMessage{client.id, client.name},
+    })
 
 	// Send the client its id
-	client.write(server.encoder.Encode("me:id", client.id))
+	client.write(server.encoder.Encode(codec.Message{"me:id", client.id}))
 
 	// Send the clients the current client list and positions
 	for _, c := range server.clients {
 		if c.id != client.id {
-			client.write(server.encoder.Encode("client:add", codec.ClientAddMessage{c.id, c.name}))
-			client.write(server.encoder.Encode("client:position", codec.ClientPosition{c.id, codec.Position{c.x, c.y}}))
+			client.write(server.encoder.Encode(codec.Message{
+                "client:add",
+                codec.ClientAddMessage{c.id, c.name},
+            }))
+			client.write(server.encoder.Encode(codec.Message{
+                "client:position",
+                codec.ClientPosition{c.id, codec.Position{c.x, c.y}},
+            }))
 		}
 	}
 }
@@ -138,13 +147,13 @@ func CreateServer() Server {
 		},
 		encoder: codec.CreateBinaryEncoder([]*codec.RegisteredCodec{
 			{0, "me:id", codec.Int8Codec{}},
-			{0, "me:name", codec.StringCodec{}},
-			{0, "me:position", codec.CreatePositionCodec()},
-			{0, "client:add", codec.CreateClientAddCodec()},
-			{0, "client:remove", codec.Int8Codec{}},
-			{0, "client:name", codec.CreateClientNameCodec()},
-			{0, "client:position", codec.CreateClientPositionCodec()},
-			{0, "say", codec.StringCodec{}},
+			{1, "me:name", codec.StringCodec{}},
+			{2, "me:position", codec.CreatePositionCodec()},
+			{3, "client:add", codec.CreateClientAddCodec()},
+			{4, "client:remove", codec.Int8Codec{}},
+			{5, "client:name", codec.CreateClientNameCodec()},
+			{6, "client:position", codec.CreateClientPositionCodec()},
+			{7, "say", codec.StringCodec{}},
 		}, codec.Int8Codec{}),
 	}
 }

@@ -31,8 +31,7 @@ func CreateBinaryEncoder(codecs []*RegisteredCodec, idCodec Codec) BinaryEncoder
 	codecsByName := make(map[string]*RegisteredCodec)
 	codecsById := make(map[uint8]*RegisteredCodec)
 
-	for index, codec := range codecs {
-		codec.Id = uint8(index)
+	for _, codec := range codecs {
 		codecsById[codec.Id] = codec
 		codecsByName[codec.Name] = codec
 	}
@@ -44,21 +43,21 @@ func CreateBinaryEncoder(codecs []*RegisteredCodec, idCodec Codec) BinaryEncoder
 	}
 }
 
-func (e BinaryEncoder) Encode(name string, data any) []byte {
-	codec := e.codecsByName[name]
-
+func (e BinaryEncoder) Encode(message Message) []byte {
 	var buffer bytes.Buffer
 
+	codec := e.codecsByName[message.Name]
+
 	e.idCodec.encode(&buffer, codec.Id)
-	codec.Handler.encode(&buffer, data)
+	codec.Handler.encode(&buffer, message.Data)
 
 	return buffer.Bytes()
 }
 
 func (e BinaryEncoder) Decode(data []byte) Message {
 	var buffer = bytes.NewBuffer(data)
-	id := e.idCodec.decode(buffer)
-	codec := e.codecsById[id.(uint8)]
+	id := e.idCodec.decode(buffer).(uint8)
+	codec := e.codecsById[id]
 
 	return Message{
 		Name: codec.Name,
