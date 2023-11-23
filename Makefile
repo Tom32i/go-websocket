@@ -38,10 +38,6 @@ build-client:
 #lint:
 #	npx eslint src/* --ext .js,.json --fix
 
-## Start server in dev mode
-start:
-	go run main.go
-
 build-server@dev:
 	go build -o ./bin/server main.go
 
@@ -58,9 +54,14 @@ build-server@production:
 ## Build
 build: build-server@dev build-client
 
-## Start server
+## Build and run server
 run: build
 	./bin/server
+
+## Start server
+start: export GODEBUG=gctrace=1
+start:
+	go run main.go
 
 ##########
 # Deploy #

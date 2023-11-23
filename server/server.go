@@ -86,9 +86,9 @@ func (server *Server) removeClient(c *Client) {
 }
 
 func (server Server) writeAll(message codec.Message) {
-	buffer := server.encoder.Encode(message)
+	bytes := server.encoder.Encode(message)
 	for _, c := range server.clients {
-		c.write(buffer)
+		c.write(bytes)
 	}
 }
 
